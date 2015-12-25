@@ -13,8 +13,11 @@ features  of the data (summarise and predict).
 
 This leads to another approch of looking at the adjusted R-squared. The explanation of this statistic is almost the same as 
 R-squared but it's designed to build in an automatic penalty for adding an extra variable. 
+
 We compare R-squared to the adjusted R-squared. 
-Model build is more an art, we have to define a criterion which tries to find the good equilibrum between overfitting i.e the model too complex, and underfitting i.e. the model does not fit very well. 
+
+Model build is more an art, we have to define a criterion which tries to find the good equilibrium between overfitting i.e the model too complex, and underfitting i.e. the model does not fit very well. 
+
 The Best model is the model that maximise the adjusted R-squared (minimise the Root Mean Squared Error)
 
 To help you pick the important features you can find the following:
