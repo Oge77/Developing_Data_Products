@@ -12,3 +12,6 @@ features  of the data (summarise and predict).
 This leads to another approch of looking at the adjusted R-squared. The explanation of this statistic is almost the same as 
 R-squared but it's designed to build in an automatic penalty for adding an extra variable.
 We compare R-squared to the adjusted R-squared
+Full description of the processing workflow is available on ....
+
+Source code is available on the GitHub(https://github.com/Oge77/Developing_Data_Products/)
