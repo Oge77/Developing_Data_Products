@@ -32,3 +32,5 @@ And to check the assumption that the model captures the important features of th
 The Application is available [here](https://oge77.shinyapps.io/My_app_Developing_Data_Products)
 
 Source code is available on the [GitHub](https://github.com/Oge77/Developing_Data_Products/)
+
+In the application, you may encounter delayed loading of components.
