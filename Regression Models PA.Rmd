@@ -1,0 +1,246 @@
+---
+title: "Regression Models PA"
+author: "Gerard NIGNON"
+date: "16 août 2015"
+output: pdf_document
+geometry: margin=1in
+fontsize: 10pt
+---
+###Synopsis
+
+You work for Motor Trend, a magazine about the automobile industry. Looking at a data set of a collection of cars, they are interested in exploring the relationship between a set of variables and miles per gallon (mpg) (outcome). They are particularly interested in the following two questions:
+
+* “Is an automatic or manual transmission better for MPG”
+* "Quantify the MPG difference between automatic and manual transmissions"
+
+```{r echo=F, results='hide',message=FALSE,warning=FALSE}
+packages <- c("dplyr", "knitr", "ggvis", "ggplot2")
+sapply(packages, require, character.only = TRUE, quietly = TRUE)
+library(dplyr)
+library(knitr)
+library(GGally)
+library(ggplot2)
+library(leaps)
+library(glmulti)
+library(car)
+data(mtcars)
+mtcars
+```
+### Visual analysis
+
+From the visual analysis of the boxplot in __Figure 1__ we can assert that automatic cars have lower miles per gallon, and therefore a lower fuel efficiency, than manual cars do. However, it is possible that this apparent pattern happened by random chance-- that is, that we just happened to pick a group of automatic cars with low efficiency and a group of manual cars with higher efficiency. We may have to push the analysis further than just visual. 
+
+### Correlation analysis
+
+We create nice pairwise scatter plots __Figure 2__. This is a good way to investigate the relationship between all the variables in this data set. For example, `mpg` has a strong and negative correlation (`-0.852` ) with `cyl`.
+
+### Individual regression
+
+We ran a simple linear regression model with mpg as outcome and the transmission (Automatic and Manual) as categorical precitor variables.
+
+```{r, echo=FALSE}
+mtcars$am <- factor(mtcars$am, levels=c(0, 1), labels=c("Automatic", "Manual"))
+kable(summary(lm(mpg ~ factor(am), data = mtcars))$coef,  format = 'markdown')
+```
+
+All the estimates provided here are in comparison with automatic transmission. The intercept of `17.14` is simply the mean MPG of automatic transmission. The slope of `7.24` is the change in the mean between manual transmission and automatic transmission. The p-value of `0.000285` for the mean MPG difference between manual and automatic transmission is significant. Therefore, we conclude from this model that manual transmission is more fuel efficient.
+
+### Group regression
+
+To make our model more realistic, we add more independent variables without overfitting. The ideal is for all of the predictor variables to be correlated with the outcome variable, but not with others, to minimise the risk of multicollinearity. Therefore, in this part of the analysis, we use multivariable linear regression to develop a model that includes effects of other variables. 
+
+Before fitting the model, we want to perform a statistical test to determine which predictors are significant. To determine the ideal formula for prediction, we select the best regression model.
+
+```{r echo=F, results='hide',message=FALSE,warning=FALSE}
+library(leaps)
+mtcars$am <- as.factor(mtcars$am)
+regsubsets.out <-
+    regsubsets(mpg ~ ., data = mtcars, nbest = 1, nvmax = NULL, 
+               force.in = NULL, force.out = NULL,
+               method = "exhaustive")
+summary.out <- summary(regsubsets.out)
+as.data.frame(summary.out$outmat)
+```
+
+ The All Subsets Regression is performed using the __regsubsets()__  and __glmulti()__ to select the variables with the highest adjusted \ R^2 \ as criterion,. The outcome is shown in __Figure 3.a__
+
+```{r, echo=FALSE}
+fit <- lm(mpg ~ wt + factor(am) + qsec, data = mtcars)
+```
+
+```{r, echo=F, results='markup'}
+#which.max(summary.out$adjr2)
+```
+
+The model with `3` variables has the highest adjusted \ R^2 \. 
+Variables marked with TRUE (__Figure 3.b.1 and Figure 3.b.2__) are the ones chosen: `mpg`(Intercept), `wt`, `qsec`, and `am`(factor). 
+
+
+
+Now let’s fit the multiple regression model with the __lm()__ function (__Figure 3.c__)
+
+
+__$\hat{mpg}\ = 9.6178 - 3.9165  \mathrm{wp} + 2.9358  \mathrm{factor\left(am\right)Manual} + 1.2259  \mathrm{qsec}$__
+
+The regression coefficients indicate the increase in the dependent variable for a unit change in a predictor variable, holding all other predictor variables constant. On average manual transmission cars have 2.94 miles per gallon more than automatic transmission cars.  Our model plains 84.97% of the variance in miles per gallon.
+
+Like most other statistical tests, regression analysis require that a set of assumptions about the data are met. 
+
+### Statistical assumptions  
+
+##### Normality __Figure 5__ 
+all the points fall close to the line and are within the confidence envelope, suggesting that we've met the normality assumption fairly well 
+
+##### Linearity __Figure 6__ 
+The component plus residual plots confirm that you’ve met the linearity assumption.
+The form of the linear model seems to be appropriate for this dataset 
+
+##### Homoscedasticity  
+```{r, echo=FALSE}
+ncvTest(fit)
+```
+The score test is nonsignificant (p = 0.21), suggesting that we’ve met the constant variance assumption
+
+##### Multicollinearity 
+
+Multicollinearity can be detected using a statistic called the variance inflation factor (VIF).
+```{r, echo=T, results='markup'}
+sqrt(vif(fit)) > 2 # problem?
+```
+
+### Unusual observations 
+
+
+Now we screen for unusual observation: outliers, high-leverage observations, and influential observations. __Figure 7__, identifies `Chrysler Imperial` as an unusual observation. Deleting this car will have a notable impact on the values of the intercept and slopes in the regression model.
+
+### Conclusions 
+
+The model seems robust and met all the underlying statistical assumptions
+. It will be more accure if we remove the `Chrysler Imperial`. 
+
+
+
+
+## Appendix 
+
+All the figures
+
+```{r, fig.height=6, fig.width=12, echo=F, message=FALSE,warning=FALSE}
+##mtcars$am <- factor(mtcars$transmission, levels=c(0, 1), labels=c("Automatic", "Manual"))
+qplot(am, mpg, data=mtcars, geom=c("boxplot", "jitter"),
+ fill=am,
+ xlab= "Transmission",
+ ylab="Miles per Gallon")
+
+```
+__Figure 1: Boxplot of Mile per Gallon and Transmission__  
+
+```{r fig.height=8, fig.width=12, echo=F, message=FALSE}
+data(mtcars)
+g = ggpairs(mtcars, lower = list(continuous = "smooth"), params = c(method = "loess", colours = "steelblue"))
+g
+```
+__Figure 2: Scatter plot matrix of dependent and independent variables__  
+
+__Variables__  
+
+```{r, echo=FALSE}
+library(leaps)
+mtcars$am <- as.factor(mtcars$am)
+regsubsets.model <-
+    regsubsets(mpg ~ ., data = mtcars, nbest = 1, nvmax = NULL, 
+               force.in = NULL, force.out = NULL,
+               method = "exhaustive")
+summary.model <- summary(regsubsets.model)
+as.data.frame(summary.model$outmat)
+```
+
+
+__Figure 3.a: Variables choice__
+
+ 
+```{r, echo=T, results='markup'}
+summary.out$which[3,]
+```
+__Figure 3.b.1: Variables choice__
+
+ 
+```{r, echo=FALSE}
+glmulti.lm.model <- glmulti(mpg ~ cyl+disp+hp+drat+wt+qsec+factor(vs)+factor(am)+gear+carb, data = mtcars,
+            level = 1,               # No interaction considered
+            method = "h",            # Exhaustive approach
+            crit = "aic",            # AIC as criteria
+            confsetsize = 3,         # Keep 5 best models
+            plotty = F, report = F,  # No plot or interim reports
+            fitfunction = "lm")      # lm function
+
+## Show 3 best models (Use @ instead of $ for an S4 object)
+glmulti.lm.model@formulas
+```
+__Figure 3.b.2: The 3 best model__
+
+```{r, echo=FALSE}
+fit <- lm(mpg ~ wt + factor(am) + qsec, data = mtcars)
+```
+
+__Coefficients__
+```{r, echo=FALSE}
+kable(summary(fit)$coef,format = 'markdown')
+```
+
+\ R^2 \
+```{r, echo=FALSE}
+summary(fit)$r.squared
+```
+__Figure 3.c: Multiple linear regression__
+
+
+```{r, echo=F, message=FALSE,warning=FALSE}
+par(mfrow=c(2,2))
+plot(fit)
+```
+
+__Figure 4:Diagnostic plots for the regression__
+
+```{r, fig.height=6, fig.width=12, echo=F, message=FALSE,warning=FALSE}
+qqPlot(fit, labels=row.names(mtcars), id.method="identify",simulate=TRUE, main="Q-Q Plot")
+
+```
+
+__Figure 5: Q-Q plot for studentized residuals__
+
+
+```{r, echo=F, message=FALSE,warning=FALSE}
+crPlots(fit)
+```
+
+__Figure 6: Component plus residual plots for the regression__
+
+```{r, echo=F, message=FALSE,warning=FALSE}
+outlierTest(fit)
+```
+
+__Figure 7.a : Identifying unusual observations - Outliers__       
+
+
+```{r, fig.height=5, fig.width=12, echo=F, message=FALSE,warning=FALSE}
+hat.plot <- function(fit) {
+p <- length(coefficients(fit))
+n <- length(fitted(fit))
+plot(hatvalues(fit), main="Index Plot of Hat Values")
+abline(h=c(2,3)*p/n, col="red", lty=2)
+identify(1:n, hatvalues(fit), names(hatvalues(fit)))
+}
+hat.plot(fit)
+```
+```{r, fig.height=5, fig.width=12, echo=F, message=FALSE,warning=FALSE} 
+cutoff <- 4/(nrow(mtcars)-length(fit$coefficients)-2)
+plot(fit, which=4, cook.levels=cutoff)
+abline(h=cutoff, lty=2, col="red")
+```
+```{r, fig.height=5, fig.width=12, echo=F, message=FALSE,warning=FALSE}
+influencePlot(fit, id.method="identify", main="Influence Plot",
+sub="Circle size is proportional to Cook’s distance")
+```
+
+__Figure 7.b : Identifying unusual observations - High leverage points and Influential observations__
