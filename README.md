@@ -16,7 +16,7 @@ R-squared but it's designed to build in an automatic penalty for adding an extra
 
 We compare R-squared to the adjusted R-squared. 
 
-Model build is more an art, we have to define a criterion which tries to find the good equilibrium between overfitting i.e the model too complex, and underfitting i.e. the model does not fit very well. 
+Model building is more an art, we have to define a criterion which tries to find the good equilibrium between overfitting i.e the model too complex, and underfitting i.e. the model does not fit very well. 
 
 The Best model is the model that maximise the adjusted R-squared (minimise the Root Mean Squared Error)
 
